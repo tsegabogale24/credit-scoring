@@ -1,37 +1,53 @@
-#### Credit Scoring Business Understanding
-Building a credit scoring model in a regulated financial environment requires a careful balance between statistical performance, business utility, and regulatory compliance. Below there is an  outline that describes the key business considerations driving our approach.
+## 📘 Credit Scoring Business Understanding
 
-1. # The Basel II Accord and the Need for Interpretability
-The Basel II Accord mandates that financial institutions maintain adequate capital reserves based on their risk exposure. This framework emphasizes the importance of transparent and well-documented credit risk models for:
+Building a credit scoring model in a regulated financial environment requires a thoughtful balance between **statistical accuracy**, **business value**, and **regulatory compliance**. This section outlines the key business considerations behind our modeling decisions.
 
-Internal Risk Management: Institutions must explain how credit decisions are made and how risk is quantified.
+---
 
-Regulatory Review: Supervisory authorities require clear documentation of the model’s logic and assumptions.
+### 1. 🧾 The Basel II Accord and the Need for Interpretability
 
-#  Implication: We prioritize interpretable models (e.g., Logistic Regression with Weight of Evidence encoding) to ensure our model is not a “black box” and aligns with Basel II’s requirements for auditability, explainability, and governance.
+The **Basel II Accord** requires financial institutions to maintain adequate capital reserves based on their credit risk exposure. It emphasizes:
 
-### Creating a Proxy for Default: Why and What Risks It Carries
-In our dataset, a direct "default" label is not available. To enable supervised learning, we create a proxy variable that defines default behavior — such as "payment more than 90 days overdue."
+- **Internal Risk Management**: Institutions must clearly explain how credit decisions are made.
+- **Regulatory Review**: Supervisory authorities require transparent documentation of model assumptions and logic.
 
-### Why It’s Necessary: Without a target variable, supervised models cannot be trained. A proxy allows us to model creditworthiness using historical repayment behavior or similar signals.
+💡 **Implication**:  
+To meet these standards, we prioritize **interpretable models** — such as **Logistic Regression with Weight of Evidence (WoE)** — to ensure our credit scoring system is explainable, auditable, and aligned with regulatory expectations.
 
-⚠️ Risks of Using a Proxy:
+---
 
-Label Misalignment: If the proxy does not accurately reflect actual default risk, predictions may be misleading.
+### 2. 🏷️ Creating a Proxy for Default: Necessity and Risks
 
-Biased Decisions: Models may incorrectly label borrowers as risky or safe, leading to financial loss or discrimination.
+Our dataset lacks a direct "default" label. To enable supervised learning, we define a **proxy variable** for default — for example, **"payment overdue by 90+ days."**
 
-Regulatory Exposure: Models based on poor proxies may fail compliance checks.
+#### ✅ Why It's Necessary:
+- Supervised models need a target variable.
+- Proxy enables learning from repayment history and behavioral signals.
 
- Mitigation: this document implies proxy assumptions, validate them through domain knowledge, and monitor model performance post-deployment.
+#### ⚠️ Risks of Using a Proxy:
+- **Label Misalignment**: Poorly defined proxies can misrepresent actual default risk.
+- **Biased Decisions**: Inaccurate proxies may lead to unfair or incorrect lending decisions.
+- **Regulatory Exposure**: Misleading models based on flawed proxies may fail audits.
 
-### Model Trade-offs: Interpretability vs. Predictive Power
-Aspect	Simple Models (e.g., Logistic Regression + WoE)	Complex Models (e.g., Gradient Boosting)
-Interpretability	High – easy to explain to stakeholders	Low – often a black box
-Performance	Moderate	High – captures nonlinear relationships
-Compliance Readiness	Strong – aligns with Basel II and model audit	Weaker – requires additional explainability tools
-Operational Simplicity	Easy to implement and maintain	More resource-intensive
+🛠️ **Mitigation**:
+We carefully document proxy assumptions, validate them with domain experts, and monitor model performance post-deployment to detect drift or bias.
 
-## Conclusion: In regulated settings, we often start with interpretable models to establish trust and pass compliance. Complex models can later be tested in parallel, provided they are accompanied by explainability frameworks (e.g., SHAP, LIME) and rigorous monitoring.
+---
 
-📌 Final Note: The credit scoring strategy is not just about optimizing metrics — it's about building responsible, transparent, and compliant systems that support both business goals and customer trust.
+### 3. ⚖️ Model Trade-offs: Interpretability vs. Predictive Power
+
+| **Aspect**              | **Simple Models (e.g., Logistic Regression + WoE)** | **Complex Models (e.g., Gradient Boosting)** |
+|-------------------------|-----------------------------------------------------|----------------------------------------------|
+| **Interpretability**    | ✅ High – easy to explain                           | ❌ Low – often a black box                    |
+| **Performance**         | ⚠️ Moderate                                         | ✅ High – captures nonlinear patterns         |
+| **Compliance Readiness**| ✅ Strong – audit-friendly                          | ❌ Weaker – requires explainability tools     |
+| **Operational Simplicity**| ✅ Easy to deploy & maintain                     | ❌ More resource-intensive                    |
+
+💡 **Conclusion**:  
+In regulated environments, we typically begin with **interpretable models** to build trust and ensure compliance. More complex models (e.g., Gradient Boosting) can be introduced later, supported by **explainability tools** such as **SHAP** or **LIME**.
+
+---
+
+### 📌 Final Note
+
+Credit scoring isn’t just about high accuracy — it's about building **responsible, transparent, and compliant systems** that serve business goals while protecting consumers and aligning with regulatory frameworks.
