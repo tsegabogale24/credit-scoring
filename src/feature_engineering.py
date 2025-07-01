@@ -5,84 +5,65 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, RobustScaler
 from sklearn.impute import SimpleImputer
 from sklearn.base import BaseEstimator, TransformerMixin
+from pathlib import Path
+import warnings
+warnings.filterwarnings('ignore')
 
-# ------------------------
-# Feature Aggregation
-# ------------------------
-def aggregate_customer_features(df):
-    """Aggregate transaction data at customer level"""
-    agg_df = df.groupby("CustomerId").agg({
-        "Amount": ["sum", "mean", "std", "count"]
-    })
-    agg_df.columns = [
-        "total_amount", "avg_amount", "std_amount", "transaction_count"
-    ]
-    agg_df.reset_index(inplace=True)
-    return agg_df
+class OutlierRemover(BaseEstimator, TransformerMixin):
+    """Robust outlier handling using IQR method"""
+    def __init__(self, factor=1.5):
+        self.factor = factor
+        self.feature_ranges = {}
+        
+    def fit(self, X, y=None):
+        X = pd.DataFrame(X)
+        for col in X.columns:
+            q1 = X[col].quantile(0.25)
+            q3 = X[col].quantile(0.75)
+            iqr = q3 - q1
+            self.feature_ranges[col] = (q1 - self.factor*iqr, q3 + self.factor*iqr)
+        return self
+    
+    def transform(self, X):
+        X = pd.DataFrame(X)
+        for col, (lower, upper) in self.feature_ranges.items():
+            X[col] = X[col].clip(lower, upper)
+        return X.values
+    
+    def get_feature_names_out(self, input_features=None):
+        return input_features
 
-# ------------------------
-# Datetime Feature Extraction
-# ------------------------
 def extract_datetime_features(df, timestamp_col):
-    """Extract datetime features from timestamp column"""
+    """Enhanced datetime feature extraction"""
     df[timestamp_col] = pd.to_datetime(df[timestamp_col])
-    df["transaction_hour"] = df[timestamp_col].dt.hour
-    df["transaction_day"] = df[timestamp_col].dt.day
-    df["transaction_month"] = df[timestamp_col].dt.month
-    df["transaction_year"] = df[timestamp_col].dt.year
+    df["transaction_weekday"] = df[timestamp_col].dt.weekday
+    for unit in ['hour', 'day', 'month', 'year']:
+        df[f"transaction_{unit}"] = getattr(df[timestamp_col].dt, unit)
     return df
 
-# ------------------------
-# Outlier Handling
-# ------------------------
-class OutlierRemover(BaseEstimator, TransformerMixin):
-    """Clip outliers using IQR method"""
-    def __init__(self):
-        self.q1 = None
-        self.q3 = None
-        self.iqr = None
-        self._feature_names_in = None
+def aggregate_customer_features(df):
+    """Comprehensive customer aggregations"""
+    agg_df = df.groupby("CustomerId").agg({
+        "Amount": ["sum", "mean", "std", "count", "max", "min"],
+        "Value": ["mean", "std"]
+    })
+    agg_df.columns = [
+        "total_amount", "avg_amount", "std_amount", "transaction_count",
+        "max_amount", "min_amount", "avg_value", "std_value"
+    ]
+    return agg_df.reset_index()
 
-    def fit(self, X, y=None):
-        X = np.asarray(X)
-        self.q1 = np.percentile(X, 25, axis=0)
-        self.q3 = np.percentile(X, 75, axis=0)
-        self.iqr = self.q3 - self.q1
-        return self
-
-    def transform(self, X):
-        X = np.asarray(X)
-        lower = self.q1 - 1.5 * self.iqr
-        upper = self.q3 + 1.5 * self.iqr
-        return np.clip(X, lower, upper)
-
-    def get_feature_names_out(self, input_features=None):
-        """Get output feature names for transformation"""
-        if input_features is None:
-            if self._feature_names_in is None:
-                raise ValueError(
-                    "Unable to generate feature names without input feature names"
-                )
-            input_features = self._feature_names_in
-        return np.asarray(input_features, dtype=object)
-
-# ------------------------
-# Pipeline Builder
-# ------------------------
 def build_feature_pipeline(numerical_features, categorical_features):
-    """Build preprocessing pipeline for features"""
-    
+    """Complete preprocessing pipeline with outlier handling"""
     numeric_pipeline = Pipeline([
         ("imputer", SimpleImputer(strategy="median")),
-        ("outlier", OutlierRemover()),
-        ("scaler", RobustScaler())
+        ("outlier", OutlierRemover()),  # Integrated outlier handling
+        ("scaler", RobustScaler())      # Robust scaling after outlier treatment
     ])
 
     categorical_pipeline = Pipeline([
         ("imputer", SimpleImputer(strategy="most_frequent")),
-        ("encoder", OneHotEncoder(handle_unknown="ignore", 
-                                sparse_output=False, 
-                                drop="if_binary"))
+        ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
     ])
 
     preprocessor = ColumnTransformer([
