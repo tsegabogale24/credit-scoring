@@ -1,0 +1,22 @@
+artifact_path: file:///C:/Users/tsega/OneDrive/Documents/credit-scoring/artifacts/7/models/m-fbd99e1958fb4a02896d8c3f937df542/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.11.3
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.7.0
+mlflow_version: 3.1.1
+model_id: m-fbd99e1958fb4a02896d8c3f937df542
+model_size_bytes: 99678
+model_uuid: m-fbd99e1958fb4a02896d8c3f937df542
+prompts: null
+run_id: 6b162cc310e342d7b2ac7abdd2edcc58
+utc_time_created: '2025-07-01 09:25:48.410872'
